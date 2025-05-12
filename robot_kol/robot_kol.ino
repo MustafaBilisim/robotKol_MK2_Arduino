@@ -5,17 +5,20 @@ VarSpeedServo servoX; // X ekseni için servo nesnesi (MG945)
 VarSpeedServo servoY; // Y ekseni için servo nesnesi (MG945)
 VarSpeedServo servoZ; // Z ekseni için servo nesnesi (MG995)
 
-const int servoAPin = 7;   // Uc tutamaç ekseni servosunun bağlı olduğu pin //SG90
+const int servoAPin = 7;   // Tutamaç servosunun bağlı olduğu pin //SG90
 const int servoXPin = 8;   // X ekseni servosunun bağlı olduğu pin //MG945
 const int servoYPin = 9;   // Y ekseni servosunun bağlı olduğu pin //MG945
 const int servoZPin = 10;  // Z ekseni 360 derece servosunun bağlı olduğu pin //MG995
 
 const int joystick1XPin = A0; // Joystick X ekseninin bağlı olduğu analog pin
-const int joystick1YPin = A1; // Joystick X ekseninin bağlı olduğu analog pin
-const int joystick1Btn = 3; // Joystick X ekseninin bağlı olduğu analog pin
-const int joystick2Btn = 2; // Joystick X ekseninin bağlı olduğu analog pin
-const int joystick2XPin = A2; // Joystick Y ekseninin bağlı olduğu analog pin
-const int joystick2YPin = A3; // Joystick X ekseninin bağlı olduğu analog pin
+const int joystick1YPin = A1; // Joystick Y ekseninin bağlı olduğu analog pin
+const int joystick1Btn = 3; // Joystick X ekseninin bağlı olduğu Buton
+const int joystick2Btn = 2; // Joystick X ekseninin bağlı olduğu Buton
+const int joystick2XPin = A2; // Joystick X ekseninin bağlı olduğu analog pin
+const int joystick2YPin = A3; // Joystick Y ekseninin bağlı olduğu analog pin
+
+int btn1Durum=0;
+int btn2Durum=0;
 
 const int joystickOrtaMin = 400; // Joystick'in ortada olduğu minimum değer
 const int joystickOrtaMax = 600; // Joystick'in ortada olduğu maksimum değer
@@ -84,7 +87,35 @@ void setup() {
   servoY.write(hedefAcisiY); // Y ekseni servosunu başlangıç pozisyonuna al
   servoZ.write(hedefAcisiZ); // Y ekseni servosunu başlangıç pozisyonuna al
 
+  pinMode(joystick1Btn, INPUT_PULLUP);
+	pinMode(joystick2Btn, INPUT_PULLUP);
+
   Serial.begin(9600);       // Seri iletişimi başlat (debug için)
+}
+
+void tutamac()
+{
+  btn1Durum = digitalRead(joystick1Btn);
+  btn2Durum = digitalRead(joystick2Btn);
+  Serial.print(btn1Durum);
+  Serial.print("\t");
+  Serial.print(btn2Durum);
+  Serial.print("\t");
+  
+  if(btn1Durum==false || btn2Durum==false )
+  {
+    servoA.write(90);
+    Serial.print("Basıldı \t");
+  }
+  else
+  {
+    servoA.write(0);
+
+    Serial.print("Bırakıldı \t");
+  }
+
+  Serial.println(servoA.read());
+
 }
 
 void loop() {
@@ -92,20 +123,22 @@ void loop() {
   int joystick1Y = analogRead(joystick1YPin); // Joystick Y ekseninden değer oku
   int joystick2X = analogRead(joystick2XPin); // Joystick Y ekseninden değer oku
   int joystick2Y = analogRead(joystick2YPin); // Joystick Y ekseninden değer oku
+ // tutamac();
 
+/*
   Serial.print("Joystick X Değeri: ");
   Serial.print(joystick1X);
   Serial.print("\tJoystick Y Değeri: ");
   Serial.print(joystick1Y);
-
+*/
   Serial.print("\t\tServo X Değeri: ");
   Serial.print(servoX.read());
   Serial.print("\tServo Y Değeri: ");
   Serial.println(servoY.read());
+  
 
   // X ekseni servosunu kontrol et (MG945 olduğunu varsayıyoruz)
   kontrolServoSAG(joystick1X, servoX, hedefAcisiX);
-
 
   // Y ekseni servosunu kontrol et (MG945 olduğunu varsayıyoruz)
   kontrolServoSOL(joystick2X, servoY, hedefAcisiY);
