@@ -1,8 +1,9 @@
 #include <VarSpeedServo.h>
 
-VarSpeedServo servoX; // X ekseni için servo nesnesi (MG995 varsayalım)
-VarSpeedServo servoY; // Y ekseni için servo nesnesi (MG945 varsayalım)
-
+VarSpeedServo servoA; // Tutamaç için servo nesnesi (SG90)
+VarSpeedServo servoX; // X ekseni için servo nesnesi (MG945)
+VarSpeedServo servoY; // Y ekseni için servo nesnesi (MG945)
+VarSpeedServo servoZ; // Z ekseni için servo nesnesi (MG995)
 
 const int servoAPin = 7;   // Uc tutamaç ekseni servosunun bağlı olduğu pin //SG90
 const int servoXPin = 8;   // X ekseni servosunun bağlı olduğu pin //MG945
@@ -16,8 +17,8 @@ const int joystick2Btn = 2; // Joystick X ekseninin bağlı olduğu analog pin
 const int joystick2XPin = A2; // Joystick Y ekseninin bağlı olduğu analog pin
 const int joystick2YPin = A3; // Joystick X ekseninin bağlı olduğu analog pin
 
-const int joystickOrtaMin = 460; // Joystick'in ortada olduğu minimum değer
-const int joystickOrtaMax = 560; // Joystick'in ortada olduğu maksimum değer
+const int joystickOrtaMin = 400; // Joystick'in ortada olduğu minimum değer
+const int joystickOrtaMax = 600; // Joystick'in ortada olduğu maksimum değer
 
 int hedefAcisiA = 55; // X ekseni için başlangıç hedef açısı
 int hedefAcisiX = 55; // X ekseni için başlangıç hedef açısı
@@ -35,7 +36,7 @@ void kontrolServoMERKEZ(int joystickDegeri, VarSpeedServo& servo, int& hedefAcis
     hedefAcisi = constrain(hedefAcisi, 180, 355);
     servo.write(hedefAcisi, 50);
   } else {
-      servo.write(90); // Sürekli dönüşlü servo için durma komutu MG995 için
+      servo.write(90); // Sürekli dönüşlü servo için durma komutu     ==> MG995 <==    için
   }
 }
 
@@ -53,14 +54,19 @@ void kontrolServoSOL(int joystickDegeri, VarSpeedServo& servo, int& hedefAcisi) 
   }
 }
 
+
 void kontrolServoSAG(int joystickDegeri, VarSpeedServo& servo, int& hedefAcisi) {
+  joystickDegeri = 1023 - joystickDegeri;
+
   if (joystickDegeri < joystickOrtaMin) {
+
+
     hedefAcisi = map(joystickDegeri, 0, joystickOrtaMin, 0, 55);
     hedefAcisi = constrain(hedefAcisi, 0, 55);
     servo.write(hedefAcisi, 50);
   } else if (joystickDegeri > joystickOrtaMax) {
-    hedefAcisi = map(joystickDegeri, joystickOrtaMax, 1023, 55, 110);
-    hedefAcisi = constrain(hedefAcisi, 55, 110);
+    hedefAcisi = map(joystickDegeri, joystickOrtaMax, 1023, 55, 90);
+    hedefAcisi = constrain(hedefAcisi, 55, 90);
     servo.write(hedefAcisi, 50);
   } else {
       servo.stop(); // Pozisyonel servo için hareketi durdur MG945 içim
@@ -68,10 +74,10 @@ void kontrolServoSAG(int joystickDegeri, VarSpeedServo& servo, int& hedefAcisi) 
 }
 
 void setup() {
-  servoA.attach(servoXPin); // X ekseni servosunu bağla
+  servoA.attach(servoAPin); // Tutamaç ekseni servosunu bağla
   servoX.attach(servoXPin); // X ekseni servosunu bağla
   servoY.attach(servoYPin); // Y ekseni servosunu bağla
-  servoZ.attach(servoXPin); // X ekseni servosunu bağla
+  servoZ.attach(servoZPin); // Z ekseni servosunu bağla
   
   servoA.write(hedefAcisiA); // Y ekseni servosunu başlangıç pozisyonuna al
   servoX.write(hedefAcisiX); // X ekseni servosunu başlangıç pozisyonuna al
@@ -86,22 +92,25 @@ void loop() {
   int joystick1Y = analogRead(joystick1YPin); // Joystick Y ekseninden değer oku
   int joystick2X = analogRead(joystick2XPin); // Joystick Y ekseninden değer oku
   int joystick2Y = analogRead(joystick2YPin); // Joystick Y ekseninden değer oku
-/*
+
   Serial.print("Joystick X Değeri: ");
-  Serial.print(joystickXValue);
+  Serial.print(joystick1X);
   Serial.print("\tJoystick Y Değeri: ");
-  Serial.println(joystickYValue);
-*/
-  Serial.print("Servo X Değeri: ");
+  Serial.print(joystick1Y);
+
+  Serial.print("\t\tServo X Değeri: ");
   Serial.print(servoX.read());
   Serial.print("\tServo Y Değeri: ");
   Serial.println(servoY.read());
 
   // X ekseni servosunu kontrol et (MG945 olduğunu varsayıyoruz)
-  kontrolServo(joystickXValue, servoX, hedefAcisiX, false);
+  kontrolServoSAG(joystick1X, servoX, hedefAcisiX);
 
-  // Y ekseni servosunu kontrol et (MG995 olduğunu varsayıyoruz)
-  kontrolServo(joystickYValue, servoY, hedefAcisiY, true);
+
+  // Y ekseni servosunu kontrol et (MG945 olduğunu varsayıyoruz)
+  kontrolServoSOL(joystick2X, servoY, hedefAcisiY);
+
+  kontrolServoMERKEZ(joystick2Y, servoZ, hedefAcisiZ);
 
   delay(50); // Okumalar arasında kısa bir gecikme
 }
