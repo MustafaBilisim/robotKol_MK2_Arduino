@@ -28,15 +28,17 @@ int hedefAcisiX = 55; // X ekseni için başlangıç hedef açısı
 int hedefAcisiY = 55; // Y ekseni için başlangıç hedef açısı
 int hedefAcisiZ = 90; // X ekseni için başlangıç hedef açısı
 
+
+
 // Joystick ekseninden okunan değeri alıp, ilgili servoyu kontrol eden fonksiyon
 void kontrolServoMERKEZ(int joystickDegeri, VarSpeedServo& servo, int& hedefAcisi) {
   if (joystickDegeri < joystickOrtaMin) {
-    hedefAcisi = map(joystickDegeri, 0, joystickOrtaMin, 5, 180);
-    hedefAcisi = constrain(hedefAcisi, 5, 180);
+    hedefAcisi = map(joystickDegeri, 0, joystickOrtaMin, 5, 95);
+    hedefAcisi = constrain(hedefAcisi, 5, 95);
     servo.write(hedefAcisi, 50);
   } else if (joystickDegeri > joystickOrtaMax) {
-    hedefAcisi = map(joystickDegeri, joystickOrtaMax, 1023, 180, 355);
-    hedefAcisi = constrain(hedefAcisi, 180, 355);
+    hedefAcisi = map(joystickDegeri, joystickOrtaMax, 1023, 95, 190);
+    hedefAcisi = constrain(hedefAcisi, 95, 190);
     servo.write(hedefAcisi, 50);
   } else {
       servo.write(90); // Sürekli dönüşlü servo için durma komutu     ==> MG995 <==    için
@@ -76,54 +78,47 @@ void kontrolServoSAG(int joystickDegeri, VarSpeedServo& servo, int& hedefAcisi) 
   }
 }
 
+
+void tutamac()
+{
+  btn1Durum = digitalRead(joystick1Btn);
+  btn2Durum = digitalRead(joystick2Btn);
+
+  if(btn1Durum==false || btn2Durum==false )
+    servoA.write(60);
+  else
+    servoA.write(0);
+
+  //Serial.println(servoA.read());
+
+}
+
+
 void setup() {
   servoA.attach(servoAPin); // Tutamaç ekseni servosunu bağla
   servoX.attach(servoXPin); // X ekseni servosunu bağla
   servoY.attach(servoYPin); // Y ekseni servosunu bağla
   servoZ.attach(servoZPin); // Z ekseni servosunu bağla
   
-  servoA.write(hedefAcisiA); // Y ekseni servosunu başlangıç pozisyonuna al
+  servoA.write(hedefAcisiA); // A ekseni servosunu başlangıç pozisyonuna al
   servoX.write(hedefAcisiX); // X ekseni servosunu başlangıç pozisyonuna al
   servoY.write(hedefAcisiY); // Y ekseni servosunu başlangıç pozisyonuna al
-  servoZ.write(hedefAcisiZ); // Y ekseni servosunu başlangıç pozisyonuna al
+ // servoZ.write(hedefAcisiZ); // Z ekseni servosunu başlangıç pozisyonuna al
 
   pinMode(joystick1Btn, INPUT_PULLUP);
-	pinMode(joystick2Btn, INPUT_PULLUP);
+  pinMode(joystick2Btn, INPUT_PULLUP);
 
   Serial.begin(9600);       // Seri iletişimi başlat (debug için)
 }
 
-void tutamac()
-{
-  btn1Durum = digitalRead(joystick1Btn);
-  btn2Durum = digitalRead(joystick2Btn);
-  Serial.print(btn1Durum);
-  Serial.print("\t");
-  Serial.print(btn2Durum);
-  Serial.print("\t");
-  
-  if(btn1Durum==false || btn2Durum==false )
-  {
-    servoA.write(90);
-    Serial.print("Basıldı \t");
-  }
-  else
-  {
-    servoA.write(0);
 
-    Serial.print("Bırakıldı \t");
-  }
-
-  Serial.println(servoA.read());
-
-}
 
 void loop() {
   int joystick1X = analogRead(joystick1XPin); // Joystick X ekseninden değer oku
   int joystick1Y = analogRead(joystick1YPin); // Joystick Y ekseninden değer oku
   int joystick2X = analogRead(joystick2XPin); // Joystick Y ekseninden değer oku
   int joystick2Y = analogRead(joystick2YPin); // Joystick Y ekseninden değer oku
- // tutamac();
+  tutamac();
 
 /*
   Serial.print("Joystick X Değeri: ");
@@ -131,19 +126,40 @@ void loop() {
   Serial.print("\tJoystick Y Değeri: ");
   Serial.print(joystick1Y);
 */
+/*
   Serial.print("\t\tServo X Değeri: ");
   Serial.print(servoX.read());
   Serial.print("\tServo Y Değeri: ");
   Serial.println(servoY.read());
-  
+ */ 
 
-  // X ekseni servosunu kontrol et (MG945 olduğunu varsayıyoruz)
-  kontrolServoSAG(joystick1X, servoX, hedefAcisiX);
+  if(joystick1X > 1000 && joystick1Y > 1000 && joystick2Y > 1000)
+  {
+    servoX.stop();
+    servoY.stop();
+    servoZ.write(90);
+    Serial.println("SINYAL YOK");
+    delay(2000);
 
-  // Y ekseni servosunu kontrol et (MG945 olduğunu varsayıyoruz)
-  kontrolServoSOL(joystick2X, servoY, hedefAcisiY);
+  }
+  else
+  {
 
-  kontrolServoMERKEZ(joystick2Y, servoZ, hedefAcisiZ);
+      // X ekseni servosunu kontrol et (MG945 olduğunu varsayıyoruz)
+      kontrolServoSAG(joystick1X, servoX, hedefAcisiX);
+    
+      // Y ekseni servosunu kontrol et (MG945 olduğunu varsayıyoruz)
+      kontrolServoSOL(joystick2X, servoY, hedefAcisiY);
+    
+      // Z ekseni servosunu kontrol et (MG995 olduğunu varsayıyoruz)
+      Serial.print("joystick1X : ");
+      Serial.print(joystick1X);
+      Serial.print("\tjoystick1Y : ");
+      Serial.print(joystick1Y);
+      Serial.print("\tjoystick2Y: ");
+      Serial.println(joystick2Y);
+      kontrolServoMERKEZ(joystick2Y, servoZ, hedefAcisiZ);
+  }
 
   delay(50); // Okumalar arasında kısa bir gecikme
 }
